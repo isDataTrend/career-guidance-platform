@@ -1,22 +1,19 @@
-from flask import Blueprint, request, jsonify
-from services.transcript_parser import parse_transcript
-from services.keyword_extractor import extract_keywords
+from flask import Blueprint, request, jsonify, current_app
+import os
 
-analysis_bp = Blueprint("analysis_bp", __name__)
+bp = Blueprint('upload_routes', __name__)
 
-@analysis_bp.route("/", methods=["POST"])
-def analyze_transcript():
-    data = request.json
-    filepath = data.get("filepath")
-    filetype = data.get("filetype")
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
-    if not filepath or not filetype:
-        return jsonify({"error": "Filepath or filetype is missing"}), 400
-
-    try:
-        text = parse_transcript(filepath, filetype)
-        keywords = extract_keywords(text)
-        return jsonify({"keywords": keywords}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@bp.route('/transcript', methods=['POST'])
+def upload_transcript():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file and allowed_file(file.filename):
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+        return jsonify({"message": "File uploaded successfully", "path": filepath}), 200
+    return jsonify({"error": "Invalid file type"}), 400
 

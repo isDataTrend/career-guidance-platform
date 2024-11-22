@@ -1,19 +1,15 @@
-from flask import Blueprint, request, jsonify
-from services.career_mapper import map_skills_to_careers
+from flask import Blueprint, jsonify
+from services.career_mapper import map_careers
 
-career_bp = Blueprint("career_bp", __name__)
+bp = Blueprint('career_routes', __name__)
 
-@career_bp.route("/", methods=["POST"])
+@bp.route('/recommendations', methods=['POST'])
 def recommend_careers():
-    data = request.json
-    skills = data.get("skills")
-
+    data = request.get_json()
+    skills = data.get('skills')
     if not skills:
-        return jsonify({"error": "Skills are missing"}), 400
+        return jsonify({"error": "Skills are required"}), 400
 
-    try:
-        careers = map_skills_to_careers(skills)
-        return jsonify({"careers": careers}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    careers = map_careers(skills)
+    return jsonify({"careers": careers}), 200
 
