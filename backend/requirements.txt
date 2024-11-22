@@ -1,0 +1,6 @@
+flask
+pdfplumber
+pytesseract
+spacy
+python-dotenv
+
